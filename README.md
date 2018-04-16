@@ -27,7 +27,7 @@ Le projet se décomposera donc ainsi :
 * mise en base des résultats de requêtes
 
 Le projet utilisera plusieurs technologies :
-* interface web en HTML/ CSS
+* interface web en Flask
 * le connecteur en python et s’appuiera sur tweep
 * la base de données sera en MongoDB
 
