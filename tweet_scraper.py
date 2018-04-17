@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 from bs4 import BeautifulSoup
-from elasticsearch import Elasticsearch, helpers
 from time import gmtime, strftime
 import argparse
 import aiohttp
@@ -13,9 +12,9 @@ import hashlib
 import json
 import re
 import sys
-import sqlite3
 import pymongo
 from pymongo import MongoClient
+import pdb #pour le debug à retirer
 
 ## clean some output
 class RecycleObject(object):
@@ -76,6 +75,8 @@ async def getUrl(init):
         url+= "%20OR%20keybase"
     if arg.verified:
         url+= "%20filter%3Averified"
+    if arg.l:
+        url+= "%3Fl={0.l}".format(arg)
 
     return url
 
@@ -189,7 +190,6 @@ async def outTweet(tweet):
     modes exist.
     '''
     if arg.database:
-
         mydb.tweets.insert_one(
         {"tweetid" : tweetid,
         "date" : date,
@@ -203,100 +203,6 @@ async def outTweet(tweet):
         "hashtags" : hashtags
         })
 
-
-    if arg.elasticsearch:
-
-        day = d.strftime("%A")
-        if day == "Monday":
-            _day = 1
-        elif day == "Tuesday":
-            _day = 2
-        elif day == "Wednesday":
-            _day = 3
-        elif day == "Thursday":
-            _day = 4
-        elif day == "Friday":
-            _day = 5
-        elif day == "Saturday":
-            _day = 6
-        elif day == "Sunday":
-            _day = 7
-        else:
-            print("[x] Something is going wrong!")
-            sys.exit(1)
-
-        hashtags = re.findall(r'(?i)\#\w+', text, flags=re.UNICODE)
-        actions = []
-        nLikes = 0
-        nReplies = 0
-        nRetweets = 0
-
-        for l in range(int(likes)):
-            jObject = {
-                "tweetid": tweetid,
-                "datestamp": date + " " + time,
-                "timezone": timezone,
-                "text": text,
-                "hashtags": hashtags,
-                "likes": True,
-                "username": username,
-                "day": _day,
-                "hour": time.split(":")[0]
-                }
-            j_data = {
-                "_index": "tweep",
-                "_type": "items",
-                "_id": tweetid + "_likes_" + str(nLikes),
-                "_source": jObject
-            }
-            actions.append(j_data)
-            nLikes += 1
-        for rep in range(int(replies)):
-            jObject = {
-                "tweetid": tweetid,
-                "datestamp": date + " " + time,
-                "timezone": timezone,
-                "text": text,
-                "hashtags": hashtags,
-                "replies": True,
-                "username": username,
-                "day": _day,
-                "hour": time.split(":")[0]
-                }
-            j_data = {
-                "_index": "tweep",
-                "_type": "items",
-                "_id": tweetid + "_replies_" + str(nReplies),
-                "_source": jObject
-            }
-            actions.append(j_data)
-            nReplies += 1
-        for rep in range(int(retweets)):
-            jObject = {
-                "tweetid": tweetid,
-                "datestamp": date + " " + time,
-                "timezone": timezone,
-                "text": text,
-                "hashtags": hashtags,
-                "retweets": True,
-                "username": username,
-                "day": _day,
-                "hour": time.split(":")[0]
-                }
-            j_data = {
-                "_index": "tweep",
-                "_type": "items",
-                "_id": tweetid + "_retweets_" + str(nRetweets),
-                "_source": jObject
-            }
-            actions.append(j_data)
-            nRetweets += 1
-
-        es = Elasticsearch(arg.elasticsearch)
-        with nostdout():
-            helpers.bulk(es, actions, chunk_size=2000, request_timeout=200)
-        actions = []
-        output = ""
     elif arg.users:
         output = username
     elif arg.tweets:
@@ -315,24 +221,6 @@ async def outTweet(tweet):
         if arg.stats:
             output+= " | {} replies {} retweets {} likes".format(replies, retweets, likes)
 
-        # Output section
-
-    if arg.o != None:
-        if arg.csv:
-            # Write all variables scraped to CSV
-            dat = [tweetid, date, time, timezone, username, text, replies, retweets, likes, hashtags]
-            with open(arg.o, "a", newline='', encoding="utf-8") as csv_file:
-                writer = csv.writer(csv_file, delimiter="|")
-                writer.writerow(dat)
-        elif arg.json:
-            # Write all variables scraped to JSON
-            dat = {"id":tweetid, "date":date, "time":time, "timezone":timezone, "username":username, "content":text, "replies":replies, "retweets":retweets, "likes":likes, "hashtags":hashtags}
-            with open(arg.o, "a", newline='', encoding="utf-8") as json_file:
-                json.dump(dat,json_file)
-                json_file.write('\n')
-        else:
-            # Writes or appends to a file.
-            print(output, file=open(arg.o, "a", encoding="utf-8"))
 
     return output
 
@@ -354,10 +242,7 @@ async def getTweets(init):
         copyright = tweet.find("div","StreamItemContent--withheld")
         if copyright is None:
             count +=1
-            if arg.elasticsearch:
-                print(await outTweet(tweet),end=".", flush=True)
-            else:
-                print(await outTweet(tweet))
+            print(await outTweet(tweet))
 
     return tweets, init, count
 
@@ -375,10 +260,6 @@ async def main():
     '''
     Putting it all together.
     '''
-
-    if arg.elasticsearch:
-        print("Indexing to Elasticsearch @" + str(arg.elasticsearch))
-
     if arg.database:
         print("Inserting into Database: " + str(arg.database))
         global mydb
@@ -434,16 +315,13 @@ def check():
             Error("Contradicting Args", "--userid and -u cannot be used together.")
     if arg.tweets and arg.users:
         Error("Contradicting Args", "--users and --tweets cannot be used together.")
-    if arg.csv and arg.o is None:
-        Error("Error", "Please specify an output file (Example: -o file.csv")
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(prog="tweep.py", usage="python3 %(prog)s [options]", description="tweep.py - An Advanced Twitter Scraping Tool")
     ap.add_argument("-u", help="User's Tweets you want to scrape.")
     ap.add_argument("-s", help="Search for Tweets containing this word or phrase.")
     ap.add_argument("-g", help="Search for geocoded tweets.")
-    ap.add_argument("-o", help="Save output to a file.")
-    ap.add_argument("-es", "--elasticsearch", help="Index to Elasticsearch")
+    ap.add_argument("-l", help="Search for Tweets in a certain language")
     ap.add_argument("--year", help="Filter Tweets before specified year.")
     ap.add_argument("--since", help="Filter Tweets sent since date (Example: 2017-12-27).")
     ap.add_argument("--until", help="Filter Tweets sent until date (Example: 2017-12-27).")
@@ -451,14 +329,12 @@ if __name__ == "__main__":
     ap.add_argument("--tweets", help="Display Tweets only.", action="store_true")
     ap.add_argument("--verified", help="Display Tweets only from verified users (Use with -s).", action="store_true")
     ap.add_argument("--users", help="Display users only (Use with -s).", action="store_true")
-    ap.add_argument("--csv", help="Write as .csv file.", action="store_true")
-    ap.add_argument("--json", help="Write as .json file.", action="store_true")
     ap.add_argument("--hashtags", help="Output hashtags in seperate column.", action="store_true")
     ap.add_argument("--userid", help="Twitter user id")
     ap.add_argument("--limit", help="Number of Tweets to pull (Increments of 20).")
     ap.add_argument("--count", help="Display number Tweets scraped at the end of session.", action="store_true")
     ap.add_argument("--stats", help="Show number of replies, retweets, and likes", action="store_true")
-    ap.add_argument("--database", help="Store tweets in the database")
+    ap.add_argument("--database", help="Store tweets in Mongo database")
     arg = ap.parse_args()
 
     check()
