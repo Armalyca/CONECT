@@ -34,7 +34,7 @@ def initdb(db):
         client = MongoClient()
         conn = client[db] #connecteur à la BDD
         conn.users.insert_one({"username" : 'init_username_ignore'})
-        conn.tweets.insert_one({"username" : 'init_tweet_ignore'})
+        conn.tweets.insert_one({"tweetid" : 'init_tweet_ignore'})
         return conn
     except:
         Error("Erreur 500", "Impossible d'initialiser la BDD.")
