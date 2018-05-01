@@ -306,8 +306,9 @@ def check():
             Error("Arguments Contradictoires", "Utiliser --verified avec -s.")
         if arg.userid:
             Error("Arguments Contradictoires", "--userid et -u ne peuvent être utilisés ensemble.")
-    if int(arg.limit)%20 != 0:
-        Error("Argument Invalide", "La limite de Tweets scrapés doit être un multiple de 20")
+    if arg.limit is not None:
+        if int(arg.limit)%20 != 0:
+            Error("Argument Invalide", "La limite de Tweets scrapés doit être un multiple de 20")
 
 
 if __name__ == "__main__":
