@@ -28,8 +28,13 @@ def nostdout():
 
 def initdb(db):
     try:
+        '''
+        On ajoute un document à chaque collection pour les initialiser.
+        '''
         client = MongoClient()
         conn = client[db] #connecteur à la BDD
+        conn.users.insert_one({"username" : 'init_username_ignore'})
+        conn.tweets.insert_one({"username" : 'init_tweet_ignore'})
         return conn
     except:
         Error("Erreur 500", "Impossible d'initialiser la BDD.")
@@ -188,33 +193,34 @@ async def outTweet(tweet):
     '''
     Insertion des tweets/users et des métadonnées dans la BDD
     '''
-    mydb.tweets.insert_one(
-    {"tweetid" : tweetid,
-    "date" : date,
-    "time" : time,
-    "timezone" : timezone,
-    "username" : username,
-    "text" : text,
-    "replies" : replies,
-    "likes" : likes,
-    "retweets" : retweets,
-    "hashtags" : hashtags,
-    "imglinks" : imglinks,
-    "links" : links
-    })
-
+    #On vérifie si le tweet n'est pas déjà dans la BDD, sinon on l'ajoute.
+    if mydb.tweets.find({"tweetid" : tweetid}).count() == 0:
+        mydb.tweets.insert_one({
+        "tweetid" : tweetid,
+        "date" : date,
+        "time" : time,
+        "timezone" : timezone,
+        "username" : username,
+        "text" : text,
+        "replies" : replies,
+        "likes" : likes,
+        "retweets" : retweets,
+        "hashtags" : hashtags,
+        "imglinks" : imglinks,
+        "links" : links})
 
 
     #On vérifie si l'utilisateur n'est pas déjà dans la BDD, sinon on l'ajoute.
-    if mydb.users.find({'username': username}).count() > 0:
+    #pdb.set_trace()
+    if mydb.users.find({"username": username}).count() == 0:
         mydb.users.insert_one({"username" : username})
 
     if arg.test == 'O':
         output = "\n{} {} {} {} <{}> {}".format(tweetid, date, time, timezone, username, text)
         output+= " | {} replies {} retweets {} likes".format(replies, retweets, likes)
-        output += "\nImgLinks : {}".format(imglinks)
-        output += "\nLinks :{}".format(links)
-        output+= "\n {}".format(hashtags)
+        output+= "\nImage Links: {}".format(imglinks)
+        output+= "\nLinks: {}".format(links)
+        output+= "\nHashtags: {}".format(hashtags)
         return (output)
 
 
@@ -264,6 +270,8 @@ async def main():
         if isinstance(mydb, str):
             print(str)
             sys.exit(1)
+
+
 
     if arg.userid is not None:
         arg.u = await getUsername()
