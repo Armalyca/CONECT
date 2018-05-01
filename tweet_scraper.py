@@ -209,13 +209,13 @@ async def outTweet(tweet):
     if mydb.users.find({'username': username}).count() > 0:
         mydb.users.insert_one({"username" : username})
 
-    if arg.test:
+    if arg.test == 'O':
         output = "\n{} {} {} {} <{}> {}".format(tweetid, date, time, timezone, username, text)
         output+= " | {} replies {} retweets {} likes".format(replies, retweets, likes)
         output += "\nImgLinks : {}".format(imglinks)
         output += "\nLinks :{}".format(links)
         output+= "\n {}".format(hashtags)
-        return output
+        return (output)
 
 
 async def getTweets(init):
@@ -305,19 +305,19 @@ def check():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(prog="tweep.py", usage="python3 %(prog)s [options]", description="un scrapper de tweet adapté de tweep.py")
     ap.add_argument("-u", help="Utilisateur dont on veut récupérer les Tweets.")
-    ap.add_argument("-s", help="Recherche des Tweets contenant ce mot ou cette phrase.")
-    ap.add_argument("-g", help="Recherche des Tweets géocodés.")
-    ap.add_argument("-l", help="Recherche des Tweets dans une langue")
-    ap.add_argument("-test", help="Argument a utilisé lorque l'on test le script dans le terminal")
-    ap.add_argument("--year", help="Filtrer les Tweets avant l'année spécifiée.")
-    ap.add_argument("--since", help="Filtrer les Tweets émis depuis la date spécifiée (Exemple: 2017-12-27).")
-    ap.add_argument("--until", help="Filtrer les Tweets émis jusqu'à la date spécifiée (Exemple: 2017-12-27).")
-    ap.add_argument("--fruit", help="Aficher les 'low-hanging-fruit' Tweets.", action="store_true")
+    ap.add_argument("-s", help="Rechercher des Tweets contenant ce mot ou cette phrase.")
+    ap.add_argument("-g", help="Rechercher des Tweets géocodés.")
+    ap.add_argument("-l", help="Rechercher des Tweets dans une langue")
+    ap.add_argument("-test", help="Afficher les résultats directement dans le terminal(O ou N).")
+    ap.add_argument("--year", help="Rechercher des Tweets depuis l'année spécifiée.")
+    ap.add_argument("--since", help="Rechercher des Tweets depuis la date spécifiée (ex: 2017-12-27).")
+    ap.add_argument("--until", help="Rechercher des Tweets jusqu'à la date spécifiée (ex: 2017-12-27).")
+    ap.add_argument("--fruit", help="Afficher les 'low-hanging-fruit' Tweets", action="store_true")
     ap.add_argument("--verified", help="Afficher seulement les Tweets d'utilisateurs verifiés (Utiliser avec -s).", action="store_true")
     ap.add_argument("--userid", help="Twitter user id")
-    ap.add_argument("--limit", help="Limite le nombre de Tweets scrapés (Multiple de 20).")
-    ap.add_argument("--count", help="Affiche le nombre de Tweets scrapés.", action="store_true")
-    ap.add_argument("--dbname", help="Permet de spécifier le nom de la BDD (CONECT par défaut)")
+    ap.add_argument("--limit", help="Limiter le nombre de Tweets scrapés (Multiple de 20).")
+    ap.add_argument("--count", help="Afficher le nombre de Tweets scrapés.", action="store_true")
+    ap.add_argument("--dbname", help="Nommer la BDD (CONECT par défaut).")
     arg = ap.parse_args()
 
     check()
