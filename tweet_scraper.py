@@ -207,14 +207,15 @@ async def outTweet(tweet):
         "retweets" : retweets,
         "hashtags" : hashtags,
         "imglinks" : imglinks,
-        "links" : links})
+        "links" : links,
+        "completed" : False})
 
 
     #On vérifie si l'utilisateur n'est pas déjà dans la BDD, sinon on l'ajoute.
     #pdb.set_trace()
     if mydb.users.find({"username": username}).count() == 0:
-        mydb.users.insert_one({"completed" : False,
-                                "username" : username})
+        mydb.users.insert_one({"username" : username,
+                                "completed" : False})
 
     if arg.test == 'O':
         output = "\n{} {} {} {} <{}> {}".format(tweetid, date, time, timezone, username, text)
