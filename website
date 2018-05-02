@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
   <head>
 
@@ -46,25 +46,26 @@
       <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
           <p>Veuillez rentrer vos critères de recherche :</p>
-          <form name="sentArg" id="ArgForm" novalidate>
+          <form action="" method="post" role="form">
+          	{{ form.csrf }}
             <div class="control-group">
               <div class="form-group floating-label-form-group controls">
-                <label>Localisation (où ?)</label>
-                <input type="text" class="form-control" placeholder="Name" id="name" required data-validation-required-message="Veuillez mettre la ville de recherche.">
+                <label for="ville">Localisation (quelle ville ?)</label>
+                <input type="text" class="form-control" placeholder="Localisation (quelle ville ?)" id="ville" required data-validation-required-message="Veuillez mettre la ville de recherche.">
                 <p class="help-block text-danger"></p>
               </div>
             </div>
             <div class="control-group">
               <div class="form-group floating-label-form-group controls">
-                <label>Localisation (dans un rayon de combien de km ?)</label>
-                <input type="email" class="form-control" placeholder="Email Address" id="email" required data-validation-required-message="Veuillez mettre le rayon de recherche autour de cette ville.">
+                <label for="km">Localisation (dans un rayon de combien de km ?)</label>
+                <input type="email" class="form-control" placeholder="Localisation (dans un rayon de combien de km ?)" id="km" required data-validation-required-message="Veuillez mettre le rayon de recherche autour de cette ville.">
                 <p class="help-block text-danger"></p>
               </div>
             </div>
             <div class="control-group">
               <div class="form-group floating-label-form-group controls">
-                <label>Mots clés</label>
-                <textarea rows="5" class="form-control" placeholder="Message" id="message" required data-validation-required-message="Veuillez rentrer des mots clés."></textarea>
+                <label for="keywords">Mots clés</label>
+                <textarea rows="5" class="form-control" placeholder="Mots clés" id="mots clés" required data-validation-required-message="Veuillez rentrer des mots clés."></textarea>
                 <p class="help-block text-danger"></p>
               </div>
             </div>
@@ -74,6 +75,27 @@
               <button type="submit" class="btn btn-primary" id="sendArgumentButton">Envoyer</button>
             </div>
           </form>
+
+          <br>
+          		{% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+ 
+        {% for message in messages %}
+            {% if "Error" not in message[1]: %}
+                <div class="alert alert-info">
+                <strong>Success! </strong> {{ message[1] }}
+                </div>
+            {% endif %}
+ 
+            {% if "Error" in message[1]: %}
+                <div class="alert alert-warning">
+                {{ message[1] }}
+                </div>
+            {% endif %}
+        {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         </div>
       </div>
     </div>
@@ -93,8 +115,7 @@
 
 
 
-    <!-- Contact Form JavaScript -->
-  <!-- <script src="py/send_Arg.py"></script> Le script pour passer les critères rentrer en arguments pour tweep-->
+    
 
  
 
